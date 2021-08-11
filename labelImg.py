@@ -321,7 +321,7 @@ class MainWindow(QMainWindow, WindowMixin):
             self.FIT_WINDOW: self.scale_fit_window,
             self.FIT_WIDTH: self.scale_fit_width,
             # Set to one to scale to 100% when loading files.
-            self.MANUAL_ZOOM: lambda: 1,
+            self.MANUAL_ZOOM: lambda: 2,
         }
 
         edit = action(get_str('editLabel'), self.edit_label,
@@ -1104,8 +1104,9 @@ class MainWindow(QMainWindow, WindowMixin):
                 self.load_labels(self.label_file.shapes)
             self.set_clean()
             self.canvas.setEnabled(True)
-            self.adjust_scale(initial=True)
+            # self.adjust_scale(initial=True)
             self.paint_canvas()
+            self.canvas.set_last_pan()
             self.add_recent_file(self.file_path)
             self.toggle_actions(True)
             self.show_bounding_box_from_annotation_file(file_path)
@@ -1167,8 +1168,9 @@ class MainWindow(QMainWindow, WindowMixin):
         self.canvas.update()
 
     def adjust_scale(self, initial=False):
-        value = self.scalers[self.FIT_WINDOW if initial else self.zoom_mode]()
-        self.zoom_widget.setValue(int(100 * value))
+        # value = self.scalers[self.FIT_WINDOW if initial else self.zoom_mode]()
+        # value = self.scalers[self.MANUAL_ZOOM]
+        self.zoom_widget.setValue(int(100 * 2))
 
     def scale_fit_window(self):
         """Figure out the size of the pixmap in order to fit the main widget."""

@@ -20,6 +20,26 @@ CURSOR_GRAB = Qt.OpenHandCursor
 
 # class Canvas(QGLWidget):
 
+class panValues():
+    def __init__(self):
+        self.pan_dict = {}
+        # self.parent().window().file_path
+
+    def add_pan(self, x, y, path):
+        if path in self.pan_dict:
+            self.pan_dict[path][0] += x
+            self.pan_dict[path][1] += y
+        else:
+            self.pan_dict[path] = [x, y]
+
+    def get_pan(self, path):
+        if path in self.pan_dict:
+            print('getting pan for: '+path)
+            return self.pan_dict[path]
+
+    def clear_pans(self, path):
+        if path in self.pan_dict:
+            self.pan_dict[path] = [0, 0]
 
 class Canvas(QWidget):
     zoomRequest = pyqtSignal(int)
@@ -66,6 +86,10 @@ class Canvas(QWidget):
 
         # initialisation for panning
         self.pan_initial_pos = QPoint()
+
+        # pan storage
+        # self.pan_value = [0, 0]
+        self.pan_handler = panValues()
 
     def set_drawing_color(self, qcolor):
         self.drawing_line_color = qcolor
@@ -187,6 +211,10 @@ class Canvas(QWidget):
                 # pan
                 delta_x = pos.x() - self.pan_initial_pos.x()
                 delta_y = pos.y() - self.pan_initial_pos.y()
+                print(delta_x, delta_y)
+                self.pan_handler.add_pan(delta_x, delta_y, self.parent().window().file_path)
+                # self.pan_value[0] += delta_x
+                # self.pan_value[1] += delta_y
                 self.scrollRequest.emit(delta_x, Qt.Horizontal)
                 self.scrollRequest.emit(delta_y, Qt.Vertical)
                 self.update()
@@ -701,6 +729,24 @@ class Canvas(QWidget):
         self.restore_cursor()
         self.pixmap = None
         self.update()
+
+    def set_last_pan(self):
+        pans = self.pan_handler.get_pan(self.parent().window().file_path)
+        print(pans)
+        # self.pan_handler.clear_pans(self.parent().window().file_path)
+        print(self.pan_initial_pos.x(), self.pan_initial_pos.y())
+        # area = super(Canvas, self).size()
+        # w, h = self.pixmap.width() * s, self.pixmap.height() * s
+        # aw, ah = area.width(), area.height()
+        # if self.pan_initial_pos.x()
+        # x =
+        if pans:
+            self.scrollRequest.emit(pans[0], Qt.Horizontal)
+            self.scrollRequest.emit(pans[1], Qt.Vertical)
+            self.update()
+
+    def reset_pan(self):
+        pass
 
     def set_drawing_shape_to_square(self, status):
         self.draw_square = status
