@@ -969,6 +969,7 @@ class MainWindow(QMainWindow, WindowMixin):
         self.actions.fitWindow.setChecked(False)
         self.zoom_mode = self.MANUAL_ZOOM
         self.zoom_widget.setValue(value)
+        # self.canvas.store_scale(value)
 
     def add_zoom(self, increment=10):
         self.set_zoom(self.zoom_widget.value() + increment)
@@ -1043,6 +1044,8 @@ class MainWindow(QMainWindow, WindowMixin):
 
     def load_file(self, file_path=None):
         """Load the specified file, or the last opened file if None."""
+        self.canvas.store_geometry()
+        self.canvas.store_scale(self.zoom_widget.value())
         self.reset_state()
         self.canvas.setEnabled(False)
         if file_path is None:
@@ -1104,9 +1107,20 @@ class MainWindow(QMainWindow, WindowMixin):
                 self.load_labels(self.label_file.shapes)
             self.set_clean()
             self.canvas.setEnabled(True)
-            # self.adjust_scale(initial=True)
+            if self.canvas.restore_geometry():
+                print('setting zoom')
+                # self.zoom_widget.setValue(int(self.canvas.get_scale()))
+                # self.set_zoom(self.canvas.get_scale())
+                # self.paint_canvas(zoom_val=self.canvas.get_scale())
+            else:
+                print('normal scale setting')
+                # self.adjust_scale(initial=True)
+
             self.paint_canvas()
-            self.canvas.set_last_pan()
+            # self.canvas.restore_geometry()
+
+
+            # self.canvas.set_last_pan()
             self.add_recent_file(self.file_path)
             self.toggle_actions(True)
             self.show_bounding_box_from_annotation_file(file_path)
@@ -1162,15 +1176,20 @@ class MainWindow(QMainWindow, WindowMixin):
 
     def paint_canvas(self):
         assert not self.image.isNull(), "cannot paint null image"
+        print(self.canvas.get_scale(), self.zoom_widget.value())
+        # self.canvas.scale = (0.01 * zoom_val) if zoom_val else (0.01 * self.zoom_widget.value())
+        # zoom_val = self.canvas.get_scale()
+        # if zoom_val:
+        #     self.canvas.scale = 0.01 * self.canvas.get_scale()
+        # else:
         self.canvas.scale = 0.01 * self.zoom_widget.value()
         self.canvas.label_font_size = int(0.02 * max(self.image.width(), self.image.height()))
         self.canvas.adjustSize()
         self.canvas.update()
 
     def adjust_scale(self, initial=False):
-        # value = self.scalers[self.FIT_WINDOW if initial else self.zoom_mode]()
-        # value = self.scalers[self.MANUAL_ZOOM]
-        self.zoom_widget.setValue(int(100 * 2))
+        value = self.scalers[self.FIT_WINDOW if initial else self.zoom_mode]()
+        self.zoom_widget.setValue(int(100 * value))
 
     def scale_fit_window(self):
         """Figure out the size of the pixmap in order to fit the main widget."""

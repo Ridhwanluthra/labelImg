@@ -23,6 +23,8 @@ CURSOR_GRAB = Qt.OpenHandCursor
 class panValues():
     def __init__(self):
         self.pan_dict = {}
+        self.geometry = {}
+        self.scale = {}
         # self.parent().window().file_path
 
     def add_pan(self, x, y, path):
@@ -34,12 +36,33 @@ class panValues():
 
     def get_pan(self, path):
         if path in self.pan_dict:
-            print('getting pan for: '+path)
+            # print('getting pan for: ' + path)
             return self.pan_dict[path]
 
     def clear_pans(self, path):
         if path in self.pan_dict:
             self.pan_dict[path] = [0, 0]
+
+    # def store_pos(self, x, y, path):
+    #     self.geometry[path] = [x, y]
+
+    def save_geometry(self, geo, path):
+        self.geometry[path] = geo
+
+    def get_geometry(self, path):
+        if path in self.geometry:
+            return self.geometry[path]
+
+    def store_scale(self, scale, path):
+        self.scale[path] = scale
+
+    def get_scale(self, path):
+        if path in self.scale:
+            return self.scale[path]
+
+    # def get_pos(self, path):
+    #     if path in self.geometry:
+    #         return self.geometry[path]
 
 class Canvas(QWidget):
     zoomRequest = pyqtSignal(int)
@@ -211,8 +234,10 @@ class Canvas(QWidget):
                 # pan
                 delta_x = pos.x() - self.pan_initial_pos.x()
                 delta_y = pos.y() - self.pan_initial_pos.y()
-                print(delta_x, delta_y)
+                # print(delta_x, delta_y)
                 self.pan_handler.add_pan(delta_x, delta_y, self.parent().window().file_path)
+                # print(self.x(), self.y())
+                # self.pan_handler.store_pos(self.x(), self.y(), self.parent().window().file_path)
                 # self.pan_value[0] += delta_x
                 # self.pan_value[1] += delta_y
                 self.scrollRequest.emit(delta_x, Qt.Horizontal)
@@ -732,9 +757,9 @@ class Canvas(QWidget):
 
     def set_last_pan(self):
         pans = self.pan_handler.get_pan(self.parent().window().file_path)
-        print(pans)
+        # print(pans)
         # self.pan_handler.clear_pans(self.parent().window().file_path)
-        print(self.pan_initial_pos.x(), self.pan_initial_pos.y())
+        # print(self.pan_initial_pos.x(), self.pan_initial_pos.y())
         # area = super(Canvas, self).size()
         # w, h = self.pixmap.width() * s, self.pixmap.height() * s
         # aw, ah = area.width(), area.height()
@@ -744,6 +769,40 @@ class Canvas(QWidget):
             self.scrollRequest.emit(pans[0], Qt.Horizontal)
             self.scrollRequest.emit(pans[1], Qt.Vertical)
             self.update()
+
+    def store_geometry(self):
+        if self.parent().window().file_path:
+            self.pan_handler.save_geometry(self.saveGeometry(), self.parent().window().file_path)
+            print('storing: ' + self.parent().window().file_path)
+
+    def restore_geometry(self):
+        geo = self.pan_handler.get_geometry(self.parent().window().file_path)
+        if geo:
+            print('restoring: ' + self.parent().window().file_path)
+            return self.restoreGeometry(geo)
+
+    def store_scale(self, zoom_val):
+        if self.parent().window().file_path:
+            self.pan_handler.store_scale(zoom_val, self.parent().window().file_path)
+
+    def get_scale(self):
+        return self.pan_handler.get_scale(self.parent().window().file_path)
+
+
+    # def set_last_pos(self):
+    #     pans = self.pan_handler.get_pos(self.parent().window().file_path)
+    #     print(pans)
+    #     # self.pan_handler.clear_pans(self.parent().window().file_path)
+    #     # print(self.pan_initial_pos.x(), self.pan_initial_pos.y())
+    #     # area = super(Canvas, self).size()
+    #     # w, h = self.pixmap.width() * s, self.pixmap.height() * s
+    #     # aw, ah = area.width(), area.height()
+    #     # if self.pan_initial_pos.x()
+    #     # x =
+    #     if pans:
+    #         self.scrollRequest.emit(pans[0], Qt.Horizontal)
+    #         self.scrollRequest.emit(pans[1], Qt.Vertical)
+    #         self.update()
 
     def reset_pan(self):
         pass
